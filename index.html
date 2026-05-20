@@ -331,13 +331,14 @@ let lookupTimer = null;
 function lookupClient() {
   clearTimeout(lookupTimer);
   lookupTimer = setTimeout(async () => {
-    const phone = document.getElementById('sale-phone').value.replace(/\s/g, '');
+    const digits = document.getElementById('sale-phone').value.replace(/\D/g, '');
     document.getElementById('sale-client-found').classList.add('hidden');
     document.getElementById('sale-client-notfound').classList.add('hidden');
     document.getElementById('use-cashback-label').style.display = 'none';
     currentClient = null;
-    if (phone.length < 7) return;
-    const { data } = await sb.from('clients').select('*').ilike('phone', `%${phone}%`).single();
+    if (digits.length < 7) return;
+    const { data: allData } = await sb.from('clients').select('*');
+    const data = allData ? allData.find(c => c.phone.replace(/\D/g, '').endsWith(digits.slice(-10))) : null;
     if (data) {
       currentClient = data;
       document.getElementById('sale-client-found').classList.remove('hidden');
