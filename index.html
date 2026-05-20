@@ -127,7 +127,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
           <input type="tel" id="sale-phone" placeholder="+7 777 000 00 00" oninput="lookupClient()">
         </div>
         <div id="sale-client-found" class="client-found hidden"></div>
-        <div id="sale-client-notfound" class="alert alert-error hidden">Клиент не найден. <a href="#" onclick="showTab('register')">Зарегистрировать?</a></div>
+        <div id="sale-client-notfound" class="hidden">
+          <div class="alert alert-info" style="background:#fff8e6;border:1px solid #ffe099;color:#7a5200;margin-bottom:12px;">Новый клиент — введите имя для регистрации</div>
+          <div class="input-group">
+            <label>Имя клиента</label>
+            <input type="text" id="sale-new-name" placeholder="Айгерим Сейткали">
+          </div>
+        </div>
         <div class="input-group">
           <label>Сумма покупки (₸)</label>
           <input type="number" id="sale-amount" placeholder="0" oninput="updatePreview()">
@@ -373,7 +379,16 @@ function updatePreview() {
 }
 
 async function completeSale() {
-  if (!currentClient) { showAlert('sale-alert', 'Сначала найдите клиента', 'error'); return; }
+  if (!currentClient) {
+    const phone = document.getElementById('sale-phone').value.trim();
+    const name = (document.getElementById('sale-new-name').value || '').trim();
+    if (!phone) { showAlert('sale-alert', 'Введите номер телефона', 'error'); return; }
+    if (!name) { showAlert('sale-alert', 'Введите имя клиента', 'error'); return; }
+    const { data: newClient, error: regError } = await sb.from('clients').insert({ name, phone, cashback_balance: 0, total_spent: 0, level: 'Bronze' }).select().single();
+    if (regError) { showAlert('sale-alert', 'Ошибка регистрации клиента', 'error'); return; }
+    currentClient = newClient;
+    document.getElementById('sale-client-notfound').classList.add('hidden');
+  }
   const amount = parseFloat(document.getElementById('sale-amount').value);
   if (!amount || amount <= 0) { showAlert('sale-alert', 'Введите сумму покупки', 'error'); return; }
   const useCb = document.getElementById('use-cashback-cb').checked;
@@ -392,8 +407,10 @@ async function completeSale() {
   document.getElementById('wa-btn-wrap').classList.remove('hidden');
   document.getElementById('sale-phone').value = '';
   document.getElementById('sale-amount').value = '';
+  document.getElementById('sale-new-name').value = '';
   document.getElementById('sale-preview').classList.add('hidden');
   document.getElementById('sale-client-found').classList.add('hidden');
+  document.getElementById('sale-client-notfound').classList.add('hidden');
   document.getElementById('use-cashback-label').style.display = 'none';
   document.getElementById('use-cashback-cb').checked = false;
   currentClient = null;
