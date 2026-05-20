@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foreveryoung Astana — Бонусная система</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+.hidden { display: none !important; }
+#login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.login-card { background: #fff; border-radius: 16px; padding: 2rem; width: 100%; max-width: 360px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
+.login-logo { text-align: center; margin-bottom: 1.5rem; }
+.login-logo h1 { font-size: 20px; font-weight: 600; color: #1a1a1a; }
+.login-logo p { font-size: 13px; color: #888; margin-top: 4px; }
+.form-group { margin-bottom: 12px; }
+.form-group label { font-size: 13px; color: #555; margin-bottom: 6px; display: block; }
+.form-group input { width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; }
+.form-group input:focus { border-color: #333; }
+.btn { width: 100%; padding: 11px; border: none; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; }
+.btn-dark { background: #1a1a1a; color: #fff; }
+.btn-dark:hover { background: #333; }
+.btn-green { background: #25D366; color: #fff; }
+.btn-green:hover { background: #1da851; }
+.btn-outline { background: #fff; color: #1a1a1a; border: 1px solid #e0e0e0; }
+.btn-outline:hover { background: #f5f5f5; }
+.error-msg { color: #ff4444; font-size: 13px; margin-top: 8px; text-align: center; }
+#app { min-height: 100vh; }
+.header { background: #1a1a1a; color: #fff; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+.header h2 { font-size: 16px; font-weight: 500; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.role-badge { font-size: 11px; background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 20px; }
+.logout-btn { font-size: 12px; color: rgba(255,255,255,0.6); cursor: pointer; background: none; border: none; }
+.logout-btn:hover { color: #fff; }
+.tabs { display: flex; background: #fff; border-bottom: 1px solid #eee; overflow-x: auto; }
+.tab { padding: 12px 16px; font-size: 13px; cursor: pointer; border: none; background: none; color: #888; white-space: nowrap; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab.active { color: #1a1a1a; border-bottom: 2px solid #1a1a1a; font-weight: 500; }
+.content { padding: 16px; max-width: 600px; margin: 0 auto; }
+.card { background: #fff; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #eee; }
+.card-title { font-size: 13px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px; }
+.input-group { margin-bottom: 12px; }
+.input-group label { font-size: 12px; color: #555; margin-bottom: 5px; display: block; }
+.input-group input { width: 100%; padding: 9px 11px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; }
+.input-group input:focus { border-color: #333; }
+.client-found { background: #f0faf5; border: 1px solid #b8e8d0; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.client-found-name { font-weight: 500; font-size: 15px; }
+.client-found-sub { font-size: 12px; color: #555; margin-top: 3px; }
+.level-badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; margin-left: 6px; }
+.level-bronze { background: #fce8d0; color: #8b4513; }
+.level-silver { background: #e8e8e8; color: #555; }
+.level-gold { background: #fff3cd; color: #856404; }
+.level-platinum { background: #e8f0fe; color: #1a56db; }
+.sale-preview { background: #f9f9f9; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.preview-row { display: flex; justify-content: space-between; font-size: 13px; color: #555; padding: 4px 0; }
+.preview-row.total { font-weight: 500; font-size: 14px; color: #1a1a1a; border-top: 1px solid #eee; padding-top: 8px; margin-top: 4px; }
+.preview-row .green { color: #25a244; font-weight: 500; }
+.preview-row .red { color: #ff4444; }
+.alert { padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 12px; }
+.alert-success { background: #f0faf5; color: #25a244; border: 1px solid #b8e8d0; }
+.alert-error { background: #fff0f0; color: #ff4444; border: 1px solid #ffc0c0; }
+.use-cashback { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 14px; cursor: pointer; }
+.use-cashback input { width: 18px; height: 18px; cursor: pointer; }
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+.metric { background: #f9f9f9; border-radius: 8px; padding: 12px; }
+.metric-label { font-size: 11px; color: #888; margin-bottom: 4px; }
+.metric-value { font-size: 20px; font-weight: 500; }
+.client-list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+.client-list-item:last-child { border-bottom: none; }
+.client-name-text { font-size: 14px; font-weight: 500; }
+.client-phone-text { font-size: 12px; color: #888; }
+.client-meta { text-align: right; }
+.client-cashback { font-size: 13px; font-weight: 500; color: #25a244; }
+.client-spent { font-size: 11px; color: #888; }
+.settings-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+.settings-row:last-child { border-bottom: none; }
+.settings-label { font-size: 14px; }
+.settings-sub { font-size: 12px; color: #888; margin-top: 2px; }
+.settings-input { width: 100px; padding: 7px 10px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; text-align: right; outline: none; }
+.search-input { width: 100%; padding: 9px 11px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 12px; }
+.import-area { border: 2px dashed #e0e0e0; border-radius: 8px; padding: 20px; text-align: center; color: #888; font-size: 13px; margin-bottom: 12px; cursor: pointer; }
+.import-area:hover { border-color: #999; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>Foreveryoung Astana</h1>
+      <p>Система лояльности</p>
+    </div>
+    <div class="form-group">
+      <label>Пароль</label>
+      <input type="password" id="login-password" placeholder="Введите пароль" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn btn-dark" onclick="login()">Войти</button>
+    <div id="login-error" class="error-msg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="header">
+    <h2>Foreveryoung Astana</h2>
+    <div class="header-right">
+      <span class="role-badge" id="role-badge">Продавец</span>
+      <button class="logout-btn" onclick="logout()">Выйти</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('sale')">Продажа</button>
+    <button class="tab" onclick="showTab('register')">Новый клиент</button>
+    <button class="tab" onclick="showTab('clients')">Клиенты</button>
+    <button class="tab admin-only hidden" onclick="showTab('settings')">Настройки</button>
+  </div>
+
+  <div class="content">
+
+    <!-- SALE -->
+    <div id="tab-sale">
+      <div class="card">
+        <div class="card-title">Поиск клиента</div>
+        <div class="input-group">
+          <label>Номер телефона</label>
+          <input type="tel" id="sale-phone" placeholder="+7 777 000 00 00" oninput="lookupClient()">
+        </div>
+        <div id="sale-client-found" class="client-found hidden"></div>
+        <div id="sale-client-notfound" class="alert alert-error hidden">Клиент не найден. <a href="#" onclick="showTab('register')">Зарегистрировать?</a></div>
+        <div class="input-group">
+          <label>Сумма покупки (₸)</label>
+          <input type="number" id="sale-amount" placeholder="0" oninput="updatePreview()">
+        </div>
+        <label class="use-cashback" id="use-cashback-label" style="display:none">
+          <input type="checkbox" id="use-cashback-cb" onchange="updatePreview()">
+          Списать кэшбек (доступно: <span id="avail-cb">0</span> ₸)
+        </label>
+        <div id="sale-preview" class="sale-preview hidden"></div>
+        <button class="btn btn-dark" onclick="completeSale()">Провести продажу</button>
+      </div>
+      <div id="sale-alert"></div>
+      <div id="wa-btn-wrap" class="hidden" style="margin-top:8px;">
+        <button class="btn btn-green" onclick="sendWhatsApp()">Отправить уведомление в WhatsApp</button>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="tab-register" class="hidden">
+      <div class="card">
+        <div class="card-title">Новый клиент</div>
+        <div class="input-group">
+          <label>Имя</label>
+          <input type="text" id="reg-name" placeholder="Айгерим Сейткали">
+        </div>
+        <div class="input-group">
+          <label>Номер телефона</label>
+          <input type="tel" id="reg-phone" placeholder="+7 777 000 00 00">
+        </div>
+        <button class="btn btn-dark" onclick="registerClient()">Зарегистрировать</button>
+      </div>
+      <div id="reg-alert"></div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div id="tab-clients" class="hidden">
+      <div class="metric-grid">
+        <div class="metric"><div class="metric-label">Клиентов</div><div class="metric-value" id="stat-clients">—</div></div>
+        <div class="metric"><div class="metric-label">Продаж</div><div class="metric-value" id="stat-sales">—</div></div>
+        <div class="metric"><div class="metric-label">Кэшбек выдан</div><div class="metric-value" id="stat-cashback">—</div></div>
+      </div>
+      <div class="card">
+        <input class="search-input" id="client-search" placeholder="Поиск по имени или телефону" oninput="renderClients()">
+        <div id="client-list"></div>
+      </div>
+      <div class="card admin-only hidden">
+        <div class="card-title">Импорт из Payda (CSV)</div>
+        <div class="import-area" onclick="document.getElementById('import-file').click()">
+          Нажми чтобы загрузить файл CSV
+        </div>
+        <input type="file" id="import-file" accept=".csv" class="hidden" onchange="importCSV(event)">
+        <div id="import-alert"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="tab-settings" class="hidden admin-only">
+      <div class="card">
+        <div class="card-title">Настройки кэшбека</div>
+        <div class="settings-row">
+          <div><div class="settings-label">% кэшбека</div><div class="settings-sub">Начисляется с каждой покупки</div></div>
+          <input class="settings-input" type="number" id="s-cashback" min="0" max="100" step="0.5">
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Silver от (₸)</div><div class="settings-sub">Сумма трат для Silver</div></div>
+          <input class="settings-input" type="number" id="s-silver">
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Gold от (₸)</div><div class="settings-sub">Сумма трат для Gold</div></div>
+          <input class="settings-input" type="number" id="s-gold">
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Platinum от (₸)</div><div class="settings-sub">Сумма трат для Platinum</div></div>
+          <input class="settings-input" type="number" id="s-platinum">
+        </div>
+        <br>
+        <button class="btn btn-dark" onclick="saveSettings()">Сохранить настройки</button>
+      </div>
+      <div id="settings-alert"></div>
+      <div class="card">
+        <div class="card-title">Рассылка в WhatsApp</div>
+        <div class="input-group">
+          <label>Текст сообщения</label>
+          <textarea id="broadcast-text" style="width:100%;padding:9px 11px;border:1px solid #e0e0e0;border-radius:8px;font-size:14px;height:100px;resize:vertical;outline:none;" placeholder="Привет! В Foreveryoung Astana сезонная распродажа..."></textarea>
+        </div>
+        <button class="btn btn-green" onclick="prepareBroadcast()">Подготовить рассылку</button>
+        <div id="broadcast-result" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://zoqxztccghazmszfzdpg.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvcXh6dGNjZ2hhem1zemZ6ZHBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NjMxMzYsImV4cCI6MjA5NDIzOTEzNn0.EqwJde1LpTQrtrcAiFljrQ3uG1F45tQxrOxGrS34wcg';
+const ADMIN_PASSWORD = 'admin2024';
+const SELLER_PASSWORD = 'seller2024';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentRole = null;
+let currentClient = null;
+let lastSale = null;
+let settings = { cashback_percent: 5, level_silver: 50000, level_gold: 150000, level_platinum: 300000 };
+let allClients = [];
+
+function login() {
+  const pwd = document.getElementById('login-password').value;
+  if (pwd === ADMIN_PASSWORD) { currentRole = 'admin'; startApp(); }
+  else if (pwd === SELLER_PASSWORD) { currentRole = 'seller'; startApp(); }
+  else { document.getElementById('login-error').textContent = 'Неверный пароль'; }
+}
+
+function startApp() {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('role-badge').textContent = currentRole === 'admin' ? 'Администратор' : 'Продавец';
+  if (currentRole === 'admin') {
+    document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
+  }
+  loadSettings();
+  loadClients();
+}
+
+function logout() {
+  currentRole = null;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-password').value = '';
+}
+
+async function loadSettings() {
+  const { data } = await sb.from('settings').select('*').eq('id', 1).single();
+  if (data) {
+    settings = data;
+    if (currentRole === 'admin') {
+      document.getElementById('s-cashback').value = data.cashback_percent;
+      document.getElementById('s-silver').value = data.level_silver;
+      document.getElementById('s-gold').value = data.level_gold;
+      document.getElementById('s-platinum').value = data.level_platinum;
+    }
+  }
+}
+
+async function saveSettings() {
+  const updates = {
+    cashback_percent: parseFloat(document.getElementById('s-cashback').value),
+    level_silver: parseFloat(document.getElementById('s-silver').value),
+    level_gold: parseFloat(document.getElementById('s-gold').value),
+    level_platinum: parseFloat(document.getElementById('s-platinum').value),
+  };
+  const { error } = await sb.from('settings').update(updates).eq('id', 1);
+  if (!error) { settings = { ...settings, ...updates }; showAlert('settings-alert', 'Настройки сохранены!', 'success'); }
+  else { showAlert('settings-alert', 'Ошибка сохранения', 'error'); }
+}
+
+async function loadClients() {
+  const { data } = await sb.from('clients').select('*').order('total_spent', { ascending: false });
+  if (data) { allClients = data; updateStats(); renderClients(); }
+}
+
+function updateStats() {
+  document.getElementById('stat-clients').textContent = allClients.length;
+  const totalCashback = allClients.reduce((s, c) => s + (c.cashback_balance || 0), 0);
+  document.getElementById('stat-cashback').textContent = Math.round(totalCashback).toLocaleString() + ' ₸';
+}
+
+async function loadSalesCount() {
+  const { count } = await sb.from('purchases').select('*', { count: 'exact', head: true });
+  document.getElementById('stat-sales').textContent = count || 0;
+}
+
+function renderClients() {
+  const q = (document.getElementById('client-search').value || '').toLowerCase();
+  const filtered = allClients.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  const list = document.getElementById('client-list');
+  if (!filtered.length) { list.innerHTML = '<div style="color:#888;font-size:13px;text-align:center;padding:16px;">Клиенты не найдены</div>'; return; }
+  list.innerHTML = filtered.slice(0, 50).map(c => `
+    <div class="client-list-item">
+      <div class="client-info">
+        <div class="client-name-text">${c.name} <span class="level-badge level-${c.level.toLowerCase()}">${c.level}</span></div>
+        <div class="client-phone-text">${c.phone}</div>
+      </div>
+      <div class="client-meta">
+        <div class="client-cashback">${Math.round(c.cashback_balance).toLocaleString()} ₸</div>
+        <div class="client-spent">потрачено: ${Math.round(c.total_spent).toLocaleString()} ₸</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getLevel(total) {
+  if (total >= settings.level_platinum) return 'Platinum';
+  if (total >= settings.level_gold) return 'Gold';
+  if (total >= settings.level_silver) return 'Silver';
+  return 'Bronze';
+}
+
+let lookupTimer = null;
+function lookupClient() {
+  clearTimeout(lookupTimer);
+  lookupTimer = setTimeout(async () => {
+    const phone = document.getElementById('sale-phone').value.replace(/\s/g, '');
+    document.getElementById('sale-client-found').classList.add('hidden');
+    document.getElementById('sale-client-notfound').classList.add('hidden');
+    document.getElementById('use-cashback-label').style.display = 'none';
+    currentClient = null;
+    if (phone.length < 7) return;
+    const { data } = await sb.from('clients').select('*').ilike('phone', `%${phone}%`).single();
+    if (data) {
+      currentClient = data;
+      document.getElementById('sale-client-found').classList.remove('hidden');
+      document.getElementById('sale-client-found').innerHTML = `
+        <div class="client-found-name">${data.name} <span class="level-badge level-${data.level.toLowerCase()}">${data.level}</span></div>
+        <div class="client-found-sub">Кэшбек: ${Math.round(data.cashback_balance).toLocaleString()} ₸ · Потрачено: ${Math.round(data.total_spent).toLocaleString()} ₸</div>
+      `;
+      document.getElementById('avail-cb').textContent = Math.round(data.cashback_balance).toLocaleString();
+      document.getElementById('use-cashback-label').style.display = data.cashback_balance > 0 ? 'flex' : 'none';
+      updatePreview();
+    } else {
+      document.getElementById('sale-client-notfound').classList.remove('hidden');
+    }
+  }, 400);
+}
+
+function updatePreview() {
+  const amount = parseFloat(document.getElementById('sale-amount').value) || 0;
+  const useCb = document.getElementById('use-cashback-cb').checked;
+  const cbBalance = currentClient ? currentClient.cashback_balance : 0;
+  const cbUsed = useCb ? Math.min(cbBalance, amount) : 0;
+  const finalAmount = amount - cbUsed;
+  const cbEarned = Math.round(finalAmount * settings.cashback_percent / 100);
+  if (amount <= 0) { document.getElementById('sale-preview').classList.add('hidden'); return; }
+  document.getElementById('sale-preview').classList.remove('hidden');
+  document.getElementById('sale-preview').innerHTML = `
+    <div class="preview-row"><span>Сумма покупки</span><span>${amount.toLocaleString()} ₸</span></div>
+    ${cbUsed > 0 ? `<div class="preview-row"><span>Списание кэшбека</span><span class="red">−${Math.round(cbUsed).toLocaleString()} ₸</span></div>` : ''}
+    <div class="preview-row"><span>Начислится кэшбек (${settings.cashback_percent}%)</span><span class="green">+${cbEarned.toLocaleString()} ₸</span></div>
+    <div class="preview-row total"><span>К оплате</span><span>${Math.round(finalAmount).toLocaleString()} ₸</span></div>
+  `;
+}
+
+async function completeSale() {
+  if (!currentClient) { showAlert('sale-alert', 'Сначала найдите клиента', 'error'); return; }
+  const amount = parseFloat(document.getElementById('sale-amount').value);
+  if (!amount || amount <= 0) { showAlert('sale-alert', 'Введите сумму покупки', 'error'); return; }
+  const useCb = document.getElementById('use-cashback-cb').checked;
+  const cbUsed = useCb ? Math.min(currentClient.cashback_balance, amount) : 0;
+  const finalAmount = amount - cbUsed;
+  const cbEarned = Math.round(finalAmount * settings.cashback_percent / 100);
+  const newTotal = currentClient.total_spent + amount;
+  const newBalance = currentClient.cashback_balance - cbUsed + cbEarned;
+  const newLevel = getLevel(newTotal);
+  const { error: purchaseError } = await sb.from('purchases').insert({ client_id: currentClient.id, amount, cashback_earned: cbEarned, cashback_used: cbUsed });
+  if (purchaseError) { showAlert('sale-alert', 'Ошибка при сохранении', 'error'); return; }
+  const { error: clientError } = await sb.from('clients').update({ cashback_balance: newBalance, total_spent: newTotal, level: newLevel }).eq('id', currentClient.id);
+  if (clientError) { showAlert('sale-alert', 'Ошибка обновления клиента', 'error'); return; }
+  lastSale = { client: currentClient, amount, cbEarned, cbUsed, newBalance, newLevel };
+  showAlert('sale-alert', `Готово! Начислено ${cbEarned.toLocaleString()} ₸ кэшбека. Баланс: ${Math.round(newBalance).toLocaleString()} ₸`, 'success');
+  document.getElementById('wa-btn-wrap').classList.remove('hidden');
+  document.getElementById('sale-phone').value = '';
+  document.getElementById('sale-amount').value = '';
+  document.getElementById('sale-preview').classList.add('hidden');
+  document.getElementById('sale-client-found').classList.add('hidden');
+  document.getElementById('use-cashback-label').style.display = 'none';
+  document.getElementById('use-cashback-cb').checked = false;
+  currentClient = null;
+  loadClients();
+}
+
+function sendWhatsApp() {
+  if (!lastSale) return;
+  const phone = lastSale.client.phone.replace(/\D/g, '');
+  const msg = encodeURIComponent(
+    `${lastSale.client.name}, спасибо за покупку в Foreveryoung Astana! 🛍\n\n` +
+    `Начислено: +${lastSale.cbEarned.toLocaleString()} ₸ кэшбека\n` +
+    `Ваш баланс: ${Math.round(lastSale.newBalance).toLocaleString()} ₸\n` +
+    `Уровень: ${lastSale.newLevel} ⭐\n\n` +
+    `Кэшбек можно потратить при следующей покупке.`
+  );
+  window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+}
+
+async function registerClient() {
+  const name = document.getElementById('reg-name').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  if (!name || !phone) { showAlert('reg-alert', 'Заполните имя и телефон', 'error'); return; }
+  const { error } = await sb.from('clients').insert({ name, phone, cashback_balance: 0, total_spent: 0, level: 'Bronze' });
+  if (error) {
+    if (error.code === '23505') showAlert('reg-alert', 'Клиент с этим телефоном уже существует', 'error');
+    else showAlert('reg-alert', 'Ошибка при регистрации', 'error');
+    return;
+  }
+  showAlert('reg-alert', `${name} успешно зарегистрирован!`, 'success');
+  document.getElementById('reg-name').value = '';
+  document.getElementById('reg-phone').value = '';
+  loadClients();
+}
+
+function prepareBroadcast() {
+  const text = document.getElementById('broadcast-text').value.trim();
+  if (!text) { document.getElementById('broadcast-result').innerHTML = '<div class="alert alert-error">Введите текст сообщения</div>'; return; }
+  const phones = allClients.map(c => c.phone.replace(/\D/g, '')).filter(p => p.length >= 10);
+  let html = `<div class="alert alert-success">Готово! ${phones.length} клиентов. Открывайте ссылки по одной:</div>`;
+  html += phones.slice(0, 10).map(p =>
+    `<div style="margin-top:6px;"><a href="https://wa.me/${p}?text=${encodeURIComponent(text)}" target="_blank" style="color:#25D366;font-size:13px;">Отправить +${p}</a></div>`
+  ).join('');
+  if (phones.length > 10) html += `<div style="font-size:12px;color:#888;margin-top:8px;">...и ещё ${phones.length - 10} клиентов</div>`;
+  document.getElementById('broadcast-result').innerHTML = html;
+}
+
+async function importCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const lines = text.split('\n').filter(l => l.trim());
+  const rows = lines.slice(1).map(l => l.split(',').map(c => c.trim().replace(/"/g, '')));
+  let imported = 0, skipped = 0;
+  for (const row of rows) {
+    if (row.length < 2) continue;
+    const phone = row[0], name = row[1] || 'Клиент';
+    const cashback = parseFloat(row[2]) || 0;
+    const { error } = await sb.from('clients').upsert({ phone, name, cashback_balance: cashback, total_spent: 0, level: 'Bronze' }, { onConflict: 'phone' });
+    if (error) skipped++; else imported++;
+  }
+  showAlert('import-alert', `Импортировано: ${imported}, пропущено: ${skipped}`, 'success');
+  loadClients();
+}
+
+function showTab(tab) {
+  ['sale','register','clients','settings'].forEach(t => {
+    document.getElementById(`tab-${t}`).classList.add('hidden');
+  });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.remove('hidden');
+  const tabNames = ['sale','register','clients','settings'];
+  document.querySelectorAll('.tab')[tabNames.indexOf(tab)]?.classList.add('active');
+  if (tab === 'clients') { loadClients(); loadSalesCount(); }
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+  setTimeout(() => { el.innerHTML = ''; }, 5000);
+}
+</script>
+</body>
+</html>
