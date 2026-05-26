@@ -334,15 +334,13 @@ async function loadSettings() {
   const { data } = await sb.from('settings').select('*').eq('id', 1).single();
   if (data) {
     settings = data;
-    if (currentRole === 'admin') {
-      document.getElementById('s-cashback-bronze').value = data.cashback_bronze ?? data.cashback_percent ?? 5;
-      document.getElementById('s-cashback-silver').value = data.cashback_silver ?? data.cashback_percent ?? 5;
-      document.getElementById('s-cashback-gold').value = data.cashback_gold ?? data.cashback_percent ?? 7;
-      document.getElementById('s-cashback-platinum').value = data.cashback_platinum ?? data.cashback_percent ?? 10;
-      document.getElementById('s-silver').value = data.level_silver;
-      document.getElementById('s-gold').value = data.level_gold;
-      document.getElementById('s-platinum').value = data.level_platinum;
-    }
+    document.getElementById('s-cashback-bronze').value = data.cashback_bronze ?? data.cashback_percent ?? 5;
+    document.getElementById('s-cashback-silver').value = data.cashback_silver ?? data.cashback_percent ?? 5;
+    document.getElementById('s-cashback-gold').value = data.cashback_gold ?? data.cashback_percent ?? 7;
+    document.getElementById('s-cashback-platinum').value = data.cashback_platinum ?? data.cashback_percent ?? 10;
+    document.getElementById('s-silver').value = data.level_silver;
+    document.getElementById('s-gold').value = data.level_gold;
+    document.getElementById('s-platinum').value = data.level_platinum;
   }
 }
 
