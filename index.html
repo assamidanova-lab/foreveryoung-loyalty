@@ -478,15 +478,16 @@ async function completeSale() {
 
 function sendWhatsApp() {
   if (!lastSale) return;
-  const phone = lastSale.client.phone.replace(/\D/g, '');
-  const msg = encodeURIComponent(
-    `${lastSale.client.name}, спасибо за покупку в Foreveryoung Astana! 🛍\n\n` +
-    `Начислено: +${lastSale.cbEarned.toLocaleString()} ₸ кэшбека\n` +
-    `Ваш баланс: ${Math.round(lastSale.newBalance).toLocaleString()} ₸\n` +
-    `Уровень: ${lastSale.newLevel} ⭐\n\n` +
-    `Кэшбек можно потратить при следующей покупке.`
+  var phone = lastSale.client.phone.replace(/\D/g, '');
+  var clientName = (lastSale.client.name === 'Клиент' || !lastSale.client.name) ? 'Дорогой клиент' : lastSale.client.name;
+  var msg = encodeURIComponent(
+    clientName + ', спасибо за покупку в Foreveryoung Astana!\n\n' +
+    'Начислено: +' + lastSale.cbEarned.toLocaleString() + ' тг кэшбека\n' +
+    'Ваш баланс: ' + Math.round(lastSale.newBalance).toLocaleString() + ' тг\n' +
+    'Уровень: ' + lastSale.newLevel + '\n\n' +
+    'Кэшбек можно потратить при следующей покупке.'
   );
-  window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+  window.open('https://wa.me/' + phone + '?text=' + msg, '_blank');
 }
 
 async function registerClient() {
