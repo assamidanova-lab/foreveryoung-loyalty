@@ -547,25 +547,24 @@ function showTab(tab) {
 
 function exportToExcel() {
   if (!allClients.length) { alert('Нет клиентов для экспорта'); return; }
-  const headers = ['Имя', 'Телефон', 'Уровень', 'Кэшбек (₸)', 'Потрачено (₸)', 'Дата регистрации'];
-  const rows = allClients.map(c => [
-    c.name,
-    c.phone,
-    c.level,
-    Math.round(c.cashback_balance),
-    Math.round(c.total_spent),
-    c.created_at ? new Date(c.created_at).toLocaleDateString('ru-RU') : ''
-  ]);
-  let csv = headers.join(';') + '
+  var headers = ['Имя', 'Телефон', 'Уровень', 'Кэшбек (тг)', 'Потрачено (тг)', 'Дата регистрации'];
+  var rows = allClients.map(function(c) {
+    return [
+      c.name, c.phone, c.level,
+      Math.round(c.cashback_balance),
+      Math.round(c.total_spent),
+      c.created_at ? new Date(c.created_at).toLocaleDateString('ru-RU') : ''
+    ];
+  });
+  var csv = headers.join(';') + '
 ';
-  rows.forEach(r => { csv += r.map(v => `"${v}"`).join(';') + '
+  rows.forEach(function(r) { csv += r.map(function(v) { return '"' + v + '"'; }).join(';') + '
 '; });
-  const bom = '﻿';
-  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
   a.href = url;
-  a.download = `foreveryoung_clients_${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = 'foreveryoung_clients_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   URL.revokeObjectURL(url);
 }
