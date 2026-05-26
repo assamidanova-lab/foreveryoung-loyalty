@@ -121,7 +121,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <button class="tab active" onclick="showTab('sale')">Продажа</button>
     <button class="tab" onclick="showTab('register')">Новый клиент</button>
     <button class="tab" onclick="showTab('clients')">Клиенты</button>
-    <button class="tab admin-only hidden" onclick="showTab('settings')">Настройки</button>
+    <button class="tab hidden" id="settings-tab-btn" onclick="showTab('settings')">Настройки</button>
   </div>
 
   <div class="content">
@@ -309,6 +309,7 @@ function startApp() {
   if (currentRole === 'admin') {
     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
   }
+  document.getElementById('settings-tab-btn').classList.remove('hidden');
   showTab('sale');
   loadSettings();
   loadClients();
