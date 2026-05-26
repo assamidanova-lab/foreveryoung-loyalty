@@ -369,7 +369,7 @@ function renderClients() {
       <div class="client-meta">
         <div class="client-cashback">${Math.round(c.cashback_balance).toLocaleString()} ₸</div>
         <div class="client-spent">потрачено: ${Math.round(c.total_spent).toLocaleString()} ₸</div>
-        <button onclick="openEditModal('${c.id}','${c.name.replace(/'/g, "\'")}','${c.phone}')" style="margin-top:4px;font-size:11px;color:#888;background:none;border:1px solid #e0e0e0;border-radius:6px;padding:2px 8px;cursor:pointer;">✏️ Изменить</button>
+        <button onclick="editById('${c.id}')" style="margin-top:4px;font-size:11px;color:#888;background:none;border:1px solid #e0e0e0;border-radius:6px;padding:2px 8px;cursor:pointer;">✏️ Изменить</button>
       </div>
     </div>
   `).join('');
@@ -565,6 +565,11 @@ function exportToExcel() {
   a.download = 'foreveryoung_clients_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function editById(id) {
+  var c = allClients.find(function(x) { return x.id === id; });
+  if (c) openEditModal(c.id, c.name, c.phone);
 }
 
 let editClientId = null;
