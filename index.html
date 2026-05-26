@@ -312,6 +312,13 @@ function startApp() {
   showTab('sale');
   loadSettings();
   loadClients();
+  if (currentRole === 'seller') {
+    document.querySelectorAll('#tab-settings input, #tab-settings textarea, #tab-settings button').forEach(function(el) {
+      el.disabled = true;
+      el.style.opacity = '0.5';
+      el.style.cursor = 'not-allowed';
+    });
+  }
 }
 
 function logout() {
