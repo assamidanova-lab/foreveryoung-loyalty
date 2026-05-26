@@ -99,6 +99,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <label>Пароль</label>
       <input type="password" id="login-password" placeholder="Введите пароль" onkeydown="if(event.key==='Enter')login()">
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <input type="checkbox" id="remember-me" style="width:16px;height:16px;cursor:pointer;" checked>
+      <label for="remember-me" style="font-size:13px;color:#555;cursor:pointer;">Запомнить меня</label>
+    </div>
     <button class="btn btn-dark" onclick="login()">Войти</button>
     <div id="login-error" class="error-msg"></div>
   </div>
@@ -284,9 +288,18 @@ let allClients = [];
 
 function login() {
   const pwd = document.getElementById('login-password').value;
-  if (pwd === ADMIN_PASSWORD) { currentRole = 'admin'; startApp(); }
-  else if (pwd === SELLER_PASSWORD) { currentRole = 'seller'; startApp(); }
-  else { document.getElementById('login-error').textContent = 'Неверный пароль'; }
+  var remember = document.getElementById('remember-me').checked;
+  if (pwd === ADMIN_PASSWORD) {
+    currentRole = 'admin';
+    if (remember) sessionStorage.setItem('fy_role', 'admin');
+    startApp();
+  } else if (pwd === SELLER_PASSWORD) {
+    currentRole = 'seller';
+    if (remember) sessionStorage.setItem('fy_role', 'seller');
+    startApp();
+  } else {
+    document.getElementById('login-error').textContent = 'Неверный пароль';
+  }
 }
 
 function startApp() {
@@ -303,6 +316,7 @@ function startApp() {
 
 function logout() {
   currentRole = null;
+  sessionStorage.removeItem('fy_role');
   document.getElementById('login-screen').classList.remove('hidden');
   document.getElementById('app').classList.add('hidden');
   document.getElementById('login-password').value = '';
@@ -604,6 +618,15 @@ async function saveEdit() {
   closeEditModal();
   loadClients();
 }
+
+// Auto-login from session
+(function() {
+  var saved = sessionStorage.getItem('fy_role');
+  if (saved === 'admin' || saved === 'seller') {
+    currentRole = saved;
+    startApp();
+  }
+})();
 
 function showAlert(id, msg, type) {
   const el = document.getElementById(id);
