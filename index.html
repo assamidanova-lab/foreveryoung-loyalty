@@ -296,6 +296,7 @@ function startApp() {
   if (currentRole === 'admin') {
     document.querySelectorAll('.admin-only').forEach(el => el.classList.remove('hidden'));
   }
+  showTab('sale');
   loadSettings();
   loadClients();
 }
