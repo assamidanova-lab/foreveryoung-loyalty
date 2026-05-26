@@ -80,6 +80,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .search-input { width: 100%; padding: 9px 11px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 12px; }
 .import-area { border: 2px dashed #e0e0e0; border-radius: 8px; padding: 20px; text-align: center; color: #888; font-size: 13px; margin-bottom: 12px; cursor: pointer; }
 .import-area:hover { border-color: #999; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+.modal { background: #fff; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 360px; }
+.modal-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; }
+.modal-btns { display: flex; gap: 8px; margin-top: 16px; }
 </style>
 </head>
 <body>
@@ -130,7 +134,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         <div id="sale-client-notfound" class="hidden">
           <div class="alert alert-info" style="background:#fff8e6;border:1px solid #ffe099;color:#7a5200;margin-bottom:12px;">Новый клиент — введите имя для регистрации</div>
           <div class="input-group">
-            <label>Имя клиента</label>
+            <label>Имя клиента <span style="color:#aaa;font-weight:400;">(необязательно)</span></label>
             <input type="text" id="sale-new-name" placeholder="Айгерим Сейткали">
           </div>
         </div>
@@ -180,6 +184,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         <div id="client-list"></div>
       </div>
       <div class="card admin-only hidden">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="card-title" style="margin:0;">Экспорт клиентов</div>
+          <button class="btn btn-dark" onclick="exportToExcel()" style="width:auto;padding:8px 16px;font-size:13px;">⬇️ Скачать Excel</button>
+        </div>
+        <div style="font-size:12px;color:#888;">Скачать полный список клиентов с балансами и уровнями</div>
+      </div>
+
+      <div class="card admin-only hidden">
         <div class="card-title">Импорт из Payda (CSV)</div>
         <div class="import-area" onclick="document.getElementById('import-file').click()">
           Нажми чтобы загрузить файл CSV
@@ -192,22 +204,31 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <!-- SETTINGS -->
     <div id="tab-settings" class="hidden admin-only">
       <div class="card">
-        <div class="card-title">Настройки кэшбека</div>
-        <div class="settings-row">
-          <div><div class="settings-label">% кэшбека</div><div class="settings-sub">Начисляется с каждой покупки</div></div>
-          <input class="settings-input" type="number" id="s-cashback" min="0" max="100" step="0.5">
+        <div class="card-title">Уровни и кэшбек по уровням</div>
+        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;margin-bottom:8px;">
+          <div style="font-size:11px;color:#888;">Уровень</div>
+          <div style="font-size:11px;color:#888;text-align:right;">Сумма трат (₸)</div>
+          <div style="font-size:11px;color:#888;text-align:right;">Кэшбек %</div>
         </div>
-        <div class="settings-row">
-          <div><div class="settings-label">Silver от (₸)</div><div class="settings-sub">Сумма трат для Silver</div></div>
-          <input class="settings-input" type="number" id="s-silver">
+        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+          <div><span class="level-badge level-bronze">Bronze</span><div style="font-size:11px;color:#888;margin-top:2px;">базовый уровень</div></div>
+          <div style="font-size:12px;color:#aaa;text-align:right;">от 0 ₸</div>
+          <input class="settings-input" type="number" id="s-cashback-bronze" min="0" max="100" step="0.5" style="width:80px;">
         </div>
-        <div class="settings-row">
-          <div><div class="settings-label">Gold от (₸)</div><div class="settings-sub">Сумма трат для Gold</div></div>
-          <input class="settings-input" type="number" id="s-gold">
+        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+          <div><span class="level-badge level-silver">Silver</span></div>
+          <input class="settings-input" type="number" id="s-silver" style="width:80px;">
+          <input class="settings-input" type="number" id="s-cashback-silver" min="0" max="100" step="0.5" style="width:80px;">
         </div>
-        <div class="settings-row">
-          <div><div class="settings-label">Platinum от (₸)</div><div class="settings-sub">Сумма трат для Platinum</div></div>
-          <input class="settings-input" type="number" id="s-platinum">
+        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+          <div><span class="level-badge level-gold">Gold</span></div>
+          <input class="settings-input" type="number" id="s-gold" style="width:80px;">
+          <input class="settings-input" type="number" id="s-cashback-gold" min="0" max="100" step="0.5" style="width:80px;">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;padding:8px 0;">
+          <div><span class="level-badge level-platinum">Platinum</span></div>
+          <input class="settings-input" type="number" id="s-platinum" style="width:80px;">
+          <input class="settings-input" type="number" id="s-cashback-platinum" min="0" max="100" step="0.5" style="width:80px;">
         </div>
         <br>
         <button class="btn btn-dark" onclick="saveSettings()">Сохранить настройки</button>
@@ -224,6 +245,26 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="edit-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-title">Редактировать клиента</div>
+    <div class="input-group">
+      <label>Имя</label>
+      <input type="text" id="edit-name" placeholder="Имя клиента">
+    </div>
+    <div class="input-group">
+      <label>Телефон</label>
+      <input type="tel" id="edit-phone" placeholder="+7 777 000 00 00">
+    </div>
+    <div id="edit-alert"></div>
+    <div class="modal-btns">
+      <button class="btn btn-dark" onclick="saveEdit()" style="flex:1;">Сохранить</button>
+      <button class="btn btn-outline" onclick="closeEditModal()" style="flex:1;">Отмена</button>
+    </div>
   </div>
 </div>
 
@@ -271,7 +312,10 @@ async function loadSettings() {
   if (data) {
     settings = data;
     if (currentRole === 'admin') {
-      document.getElementById('s-cashback').value = data.cashback_percent;
+      document.getElementById('s-cashback-bronze').value = data.cashback_bronze ?? data.cashback_percent ?? 5;
+      document.getElementById('s-cashback-silver').value = data.cashback_silver ?? data.cashback_percent ?? 5;
+      document.getElementById('s-cashback-gold').value = data.cashback_gold ?? data.cashback_percent ?? 7;
+      document.getElementById('s-cashback-platinum').value = data.cashback_platinum ?? data.cashback_percent ?? 10;
       document.getElementById('s-silver').value = data.level_silver;
       document.getElementById('s-gold').value = data.level_gold;
       document.getElementById('s-platinum').value = data.level_platinum;
@@ -281,7 +325,11 @@ async function loadSettings() {
 
 async function saveSettings() {
   const updates = {
-    cashback_percent: parseFloat(document.getElementById('s-cashback').value),
+    cashback_percent: parseFloat(document.getElementById('s-cashback-bronze').value),
+    cashback_bronze: parseFloat(document.getElementById('s-cashback-bronze').value),
+    cashback_silver: parseFloat(document.getElementById('s-cashback-silver').value),
+    cashback_gold: parseFloat(document.getElementById('s-cashback-gold').value),
+    cashback_platinum: parseFloat(document.getElementById('s-cashback-platinum').value),
     level_silver: parseFloat(document.getElementById('s-silver').value),
     level_gold: parseFloat(document.getElementById('s-gold').value),
     level_platinum: parseFloat(document.getElementById('s-platinum').value),
@@ -321,6 +369,7 @@ function renderClients() {
       <div class="client-meta">
         <div class="client-cashback">${Math.round(c.cashback_balance).toLocaleString()} ₸</div>
         <div class="client-spent">потрачено: ${Math.round(c.total_spent).toLocaleString()} ₸</div>
+        <button onclick="openEditModal('${c.id}','${c.name.replace(/'/g, "\'")}','${c.phone}')" style="margin-top:4px;font-size:11px;color:#888;background:none;border:1px solid #e0e0e0;border-radius:6px;padding:2px 8px;cursor:pointer;">✏️ Изменить</button>
       </div>
     </div>
   `).join('');
@@ -331,6 +380,13 @@ function getLevel(total) {
   if (total >= settings.level_gold) return 'Gold';
   if (total >= settings.level_silver) return 'Silver';
   return 'Bronze';
+}
+
+function getCashbackPercent(level) {
+  if (level === 'Platinum') return settings.cashback_platinum ?? settings.cashback_percent ?? 10;
+  if (level === 'Gold') return settings.cashback_gold ?? settings.cashback_percent ?? 7;
+  if (level === 'Silver') return settings.cashback_silver ?? settings.cashback_percent ?? 5;
+  return settings.cashback_bronze ?? settings.cashback_percent ?? 5;
 }
 
 let lookupTimer = null;
@@ -367,13 +423,15 @@ function updatePreview() {
   const cbBalance = currentClient ? currentClient.cashback_balance : 0;
   const cbUsed = useCb ? Math.min(cbBalance, amount) : 0;
   const finalAmount = amount - cbUsed;
-  const cbEarned = Math.round(finalAmount * settings.cashback_percent / 100);
+  const clientLevel = currentClient ? currentClient.level : 'Bronze';
+  const cbPercent = getCashbackPercent(clientLevel);
+  const cbEarned = Math.round(finalAmount * cbPercent / 100);
   if (amount <= 0) { document.getElementById('sale-preview').classList.add('hidden'); return; }
   document.getElementById('sale-preview').classList.remove('hidden');
   document.getElementById('sale-preview').innerHTML = `
     <div class="preview-row"><span>Сумма покупки</span><span>${amount.toLocaleString()} ₸</span></div>
     ${cbUsed > 0 ? `<div class="preview-row"><span>Списание кэшбека</span><span class="red">−${Math.round(cbUsed).toLocaleString()} ₸</span></div>` : ''}
-    <div class="preview-row"><span>Начислится кэшбек (${settings.cashback_percent}%)</span><span class="green">+${cbEarned.toLocaleString()} ₸</span></div>
+    <div class="preview-row"><span>Начислится кэшбек (${cbPercent}%)</span><span class="green">+${cbEarned.toLocaleString()} ₸</span></div>
     <div class="preview-row total"><span>К оплате</span><span>${Math.round(finalAmount).toLocaleString()} ₸</span></div>
   `;
 }
@@ -383,8 +441,7 @@ async function completeSale() {
     const phone = document.getElementById('sale-phone').value.trim();
     const name = (document.getElementById('sale-new-name').value || '').trim();
     if (!phone) { showAlert('sale-alert', 'Введите номер телефона', 'error'); return; }
-    if (!name) { showAlert('sale-alert', 'Введите имя клиента', 'error'); return; }
-    const { data: newClient, error: regError } = await sb.from('clients').insert({ name, phone, cashback_balance: 0, total_spent: 0, level: 'Bronze' }).select().single();
+    const { data: newClient, error: regError } = await sb.from('clients').insert({ name: name || 'Клиент', phone, cashback_balance: 0, total_spent: 0, level: 'Bronze' }).select().single();
     if (regError) { showAlert('sale-alert', 'Ошибка регистрации клиента', 'error'); return; }
     currentClient = newClient;
     document.getElementById('sale-client-notfound').classList.add('hidden');
@@ -394,7 +451,8 @@ async function completeSale() {
   const useCb = document.getElementById('use-cashback-cb').checked;
   const cbUsed = useCb ? Math.min(currentClient.cashback_balance, amount) : 0;
   const finalAmount = amount - cbUsed;
-  const cbEarned = Math.round(finalAmount * settings.cashback_percent / 100);
+  const cbPercent = getCashbackPercent(currentClient.level);
+  const cbEarned = Math.round(finalAmount * cbPercent / 100);
   const newTotal = currentClient.total_spent + amount;
   const newBalance = currentClient.cashback_balance - cbUsed + cbEarned;
   const newLevel = getLevel(newTotal);
@@ -485,6 +543,62 @@ function showTab(tab) {
   const tabNames = ['sale','register','clients','settings'];
   document.querySelectorAll('.tab')[tabNames.indexOf(tab)]?.classList.add('active');
   if (tab === 'clients') { loadClients(); loadSalesCount(); }
+}
+
+function exportToExcel() {
+  if (!allClients.length) { alert('Нет клиентов для экспорта'); return; }
+  const headers = ['Имя', 'Телефон', 'Уровень', 'Кэшбек (₸)', 'Потрачено (₸)', 'Дата регистрации'];
+  const rows = allClients.map(c => [
+    c.name,
+    c.phone,
+    c.level,
+    Math.round(c.cashback_balance),
+    Math.round(c.total_spent),
+    c.created_at ? new Date(c.created_at).toLocaleDateString('ru-RU') : ''
+  ]);
+  let csv = headers.join(';') + '
+';
+  rows.forEach(r => { csv += r.map(v => `"${v}"`).join(';') + '
+'; });
+  const bom = '﻿';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `foreveryoung_clients_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+let editClientId = null;
+
+function openEditModal(id, name, phone) {
+  editClientId = id;
+  document.getElementById('edit-name').value = name;
+  document.getElementById('edit-phone').value = phone;
+  document.getElementById('edit-alert').innerHTML = '';
+  document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.add('hidden');
+  editClientId = null;
+}
+
+async function saveEdit() {
+  const name = document.getElementById('edit-name').value.trim();
+  const phone = document.getElementById('edit-phone').value.trim();
+  if (!name || !phone) {
+    document.getElementById('edit-alert').innerHTML = '<div class="alert alert-error">Заполните все поля</div>';
+    return;
+  }
+  const { error } = await sb.from('clients').update({ name, phone }).eq('id', editClientId);
+  if (error) {
+    document.getElementById('edit-alert').innerHTML = '<div class="alert alert-error">Ошибка сохранения</div>';
+    return;
+  }
+  closeEditModal();
+  loadClients();
 }
 
 function showAlert(id, msg, type) {
