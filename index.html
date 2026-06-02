@@ -554,29 +554,37 @@ function prepareBroadcast() {
 async function importCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
+  const importAlert = document.getElementById('import-alert');
+  importAlert.innerHTML = '<div class="alert alert-info" style="background:#e6f1fb;border:1px solid #b0d0f0;color:#185fa5;">Загрузка... пожалуйста подождите</div>';
   const text = await file.text();
   const lines = text.split('\n').filter(l => l.trim());
   const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-  const rows = lines.slice(1).map(l => l.split(',').map(c => c.trim().replace(/"/g, '')));
-  let imported = 0, skipped = 0;
-  for (const row of rows) {
-    if (row.length < 2) continue;
+  const rows = lines.slice(1);
+  const batch = [];
+  for (const line of rows) {
+    if (!line.trim()) continue;
+    const cols = line.split(',').map(c => c.trim().replace(/"/g, ''));
     const obj = {};
-    headers.forEach((h, i) => { obj[h] = row[i] || ''; });
-    const phone = obj['phone'] || row[0];
-    const name = obj['name'] || row[1] || '';
-    const cashback = parseFloat(obj['cashback'] || row[2]) || 0;
+    headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
+    const phone = obj['phone'] || cols[0];
+    if (!phone) continue;
+    const name = obj['name'] || cols[1] || '';
+    const cashback = parseFloat(obj['cashback'] || cols[2]) || 0;
     const total_spent = parseFloat(obj['total_spent']) || 0;
     const purchase_count = parseInt(obj['purchase_count']) || 0;
     const level = getLevel(total_spent, purchase_count);
-    if (!phone) continue;
-    const { error } = await sb.from('clients').upsert(
-      { phone, name, cashback_balance: cashback, total_spent, purchase_count, level },
-      { onConflict: 'phone' }
-    );
-    if (error) skipped++; else imported++;
+    batch.push({ phone, name, cashback_balance: cashback, total_spent, purchase_count, level });
   }
-  showAlert('import-alert', `Импортировано: ${imported}, пропущено: ${skipped}`, 'success');
+  let imported = 0, skipped = 0;
+  const chunkSize = 200;
+  for (let i = 0; i < batch.length; i += chunkSize) {
+    const chunk = batch.slice(i, i + chunkSize);
+    importAlert.innerHTML = '<div class="alert alert-info" style="background:#e6f1fb;border:1px solid #b0d0f0;color:#185fa5;">Загружено ' + (i + chunk.length) + ' из ' + batch.length + '...</div>';
+    const { error } = await sb.from('clients').upsert(chunk, { onConflict: 'phone' });
+    if (error) skipped += chunk.length;
+    else imported += chunk.length;
+  }
+  showAlert('import-alert', 'Импортировано: ' + imported + ', пропущено: ' + skipped, 'success');
   loadClients();
 }
 
