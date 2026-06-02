@@ -612,12 +612,13 @@ function showTab(tab) {
 
 function exportToExcel() {
   if (!allClients.length) { alert('Нет клиентов для экспорта'); return; }
-  var headers = ['Имя', 'Телефон', 'Уровень', 'Кэшбек (тг)', 'Потрачено (тг)', 'Дата регистрации'];
+  var headers = ['Имя', 'Телефон', 'Уровень', 'Кэшбек (тг)', 'Потрачено (тг)', 'Кол-во покупок', 'Дата регистрации'];
   var rows = allClients.map(function(c) {
     return [
-      c.name, c.phone, c.level,
+      c.name || '—', c.phone, c.level,
       Math.round(c.cashback_balance),
       Math.round(c.total_spent),
+      c.purchase_count || 0,
       c.created_at ? new Date(c.created_at).toLocaleDateString('ru-RU') : ''
     ];
   });
