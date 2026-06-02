@@ -209,30 +209,35 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <div id="tab-settings" class="hidden admin-only">
       <div class="card">
         <div class="card-title">Уровни и кэшбек по уровням</div>
-        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 65px 65px 65px;gap:6px;margin-bottom:8px;">
           <div style="font-size:11px;color:#888;">Уровень</div>
-          <div style="font-size:11px;color:#888;text-align:right;">Сумма трат (₸)</div>
+          <div style="font-size:11px;color:#888;text-align:right;">Сумма (₸)</div>
+          <div style="font-size:11px;color:#888;text-align:right;">Покупок</div>
           <div style="font-size:11px;color:#888;text-align:right;">Кэшбек %</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
-          <div><span class="level-badge level-bronze">Bronze</span><div style="font-size:11px;color:#888;margin-top:2px;">базовый уровень</div></div>
-          <div style="font-size:12px;color:#aaa;text-align:right;">от 0 ₸</div>
-          <input class="settings-input" type="number" id="s-cashback-bronze" min="0" max="100" step="0.5" style="width:80px;">
+        <div style="display:grid;grid-template-columns:1fr 65px 65px 65px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+          <div><span class="level-badge level-bronze">Bronze</span><div style="font-size:11px;color:#888;margin-top:2px;">базовый</div></div>
+          <div style="font-size:12px;color:#aaa;text-align:right;">—</div>
+          <div style="font-size:12px;color:#aaa;text-align:right;">—</div>
+          <input class="settings-input" type="number" id="s-cashback-bronze" min="0" max="100" step="0.5" style="width:65px;">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+        <div style="display:grid;grid-template-columns:1fr 65px 65px 65px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
           <div><span class="level-badge level-silver">Silver</span></div>
-          <input class="settings-input" type="number" id="s-silver" style="width:80px;">
-          <input class="settings-input" type="number" id="s-cashback-silver" min="0" max="100" step="0.5" style="width:80px;">
+          <input class="settings-input" type="number" id="s-silver" style="width:65px;">
+          <input class="settings-input" type="number" id="s-silver-count" style="width:65px;">
+          <input class="settings-input" type="number" id="s-cashback-silver" min="0" max="100" step="0.5" style="width:65px;">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
+        <div style="display:grid;grid-template-columns:1fr 65px 65px 65px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0;">
           <div><span class="level-badge level-gold">Gold</span></div>
-          <input class="settings-input" type="number" id="s-gold" style="width:80px;">
-          <input class="settings-input" type="number" id="s-cashback-gold" min="0" max="100" step="0.5" style="width:80px;">
+          <input class="settings-input" type="number" id="s-gold" style="width:65px;">
+          <input class="settings-input" type="number" id="s-gold-count" style="width:65px;">
+          <input class="settings-input" type="number" id="s-cashback-gold" min="0" max="100" step="0.5" style="width:65px;">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:center;padding:8px 0;">
+        <div style="display:grid;grid-template-columns:1fr 65px 65px 65px;gap:6px;align-items:center;padding:8px 0;">
           <div><span class="level-badge level-platinum">Platinum</span></div>
-          <input class="settings-input" type="number" id="s-platinum" style="width:80px;">
-          <input class="settings-input" type="number" id="s-cashback-platinum" min="0" max="100" step="0.5" style="width:80px;">
+          <input class="settings-input" type="number" id="s-platinum" style="width:65px;">
+          <input class="settings-input" type="number" id="s-platinum-count" style="width:65px;">
+          <input class="settings-input" type="number" id="s-cashback-platinum" min="0" max="100" step="0.5" style="width:65px;">
         </div>
         <br>
         <button class="btn btn-dark" onclick="saveSettings()">Сохранить настройки</button>
@@ -341,6 +346,9 @@ async function loadSettings() {
     document.getElementById('s-silver').value = data.level_silver;
     document.getElementById('s-gold').value = data.level_gold;
     document.getElementById('s-platinum').value = data.level_platinum;
+    document.getElementById('s-silver-count').value = data.level_silver_count ?? 5;
+    document.getElementById('s-gold-count').value = data.level_gold_count ?? 15;
+    document.getElementById('s-platinum-count').value = data.level_platinum_count ?? 30;
   }
 }
 
@@ -354,6 +362,9 @@ async function saveSettings() {
     level_silver: parseFloat(document.getElementById('s-silver').value),
     level_gold: parseFloat(document.getElementById('s-gold').value),
     level_platinum: parseFloat(document.getElementById('s-platinum').value),
+    level_silver_count: parseFloat(document.getElementById('s-silver-count').value),
+    level_gold_count: parseFloat(document.getElementById('s-gold-count').value),
+    level_platinum_count: parseFloat(document.getElementById('s-platinum-count').value),
   };
   const { error } = await sb.from('settings').update(updates).eq('id', 1);
   if (!error) { settings = { ...settings, ...updates }; showAlert('settings-alert', 'Настройки сохранены!', 'success'); }
@@ -396,10 +407,11 @@ function renderClients() {
   `).join('');
 }
 
-function getLevel(total) {
-  if (total >= settings.level_platinum) return 'Platinum';
-  if (total >= settings.level_gold) return 'Gold';
-  if (total >= settings.level_silver) return 'Silver';
+function getLevel(total, purchaseCount) {
+  var cnt = purchaseCount || 0;
+  if (total >= settings.level_platinum || cnt >= (settings.level_platinum_count ?? 30)) return 'Platinum';
+  if (total >= settings.level_gold || cnt >= (settings.level_gold_count ?? 15)) return 'Gold';
+  if (total >= settings.level_silver || cnt >= (settings.level_silver_count ?? 5)) return 'Silver';
   return 'Bronze';
 }
 
@@ -476,10 +488,11 @@ async function completeSale() {
   const cbEarned = Math.round(finalAmount * cbPercent / 100);
   const newTotal = currentClient.total_spent + amount;
   const newBalance = currentClient.cashback_balance - cbUsed + cbEarned;
-  const newLevel = getLevel(newTotal);
+  const newPurchaseCount = (currentClient.purchase_count || 0) + 1;
+  const newLevel = getLevel(newTotal, newPurchaseCount);
   const { error: purchaseError } = await sb.from('purchases').insert({ client_id: currentClient.id, amount, cashback_earned: cbEarned, cashback_used: cbUsed });
   if (purchaseError) { showAlert('sale-alert', 'Ошибка при сохранении', 'error'); return; }
-  const { error: clientError } = await sb.from('clients').update({ cashback_balance: newBalance, total_spent: newTotal, level: newLevel }).eq('id', currentClient.id);
+  const { error: clientError } = await sb.from('clients').update({ cashback_balance: newBalance, total_spent: newTotal, level: newLevel, purchase_count: newPurchaseCount }).eq('id', currentClient.id);
   if (clientError) { showAlert('sale-alert', 'Ошибка обновления клиента', 'error'); return; }
   lastSale = { client: currentClient, amount, cbEarned, cbUsed, newBalance, newLevel };
   showAlert('sale-alert', `Готово! Начислено ${cbEarned.toLocaleString()} ₸ кэшбека. Баланс: ${Math.round(newBalance).toLocaleString()} ₸`, 'success');
@@ -543,13 +556,24 @@ async function importCSV(event) {
   if (!file) return;
   const text = await file.text();
   const lines = text.split('\n').filter(l => l.trim());
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
   const rows = lines.slice(1).map(l => l.split(',').map(c => c.trim().replace(/"/g, '')));
   let imported = 0, skipped = 0;
   for (const row of rows) {
     if (row.length < 2) continue;
-    const phone = row[0], name = row[1] || 'Клиент';
-    const cashback = parseFloat(row[2]) || 0;
-    const { error } = await sb.from('clients').upsert({ phone, name, cashback_balance: cashback, total_spent: 0, level: 'Bronze' }, { onConflict: 'phone' });
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = row[i] || ''; });
+    const phone = obj['phone'] || row[0];
+    const name = obj['name'] || row[1] || '';
+    const cashback = parseFloat(obj['cashback'] || row[2]) || 0;
+    const total_spent = parseFloat(obj['total_spent']) || 0;
+    const purchase_count = parseInt(obj['purchase_count']) || 0;
+    const level = getLevel(total_spent, purchase_count);
+    if (!phone) continue;
+    const { error } = await sb.from('clients').upsert(
+      { phone, name, cashback_balance: cashback, total_spent, purchase_count, level },
+      { onConflict: 'phone' }
+    );
     if (error) skipped++; else imported++;
   }
   showAlert('import-alert', `Импортировано: ${imported}, пропущено: ${skipped}`, 'success');
