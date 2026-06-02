@@ -389,13 +389,13 @@ async function loadSalesCount() {
 
 function renderClients() {
   const q = (document.getElementById('client-search').value || '').toLowerCase();
-  const filtered = allClients.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q));
+  const filtered = allClients.filter(c => (c.name || '').toLowerCase().includes(q) || (c.phone || '').includes(q));
   const list = document.getElementById('client-list');
   if (!filtered.length) { list.innerHTML = '<div style="color:#888;font-size:13px;text-align:center;padding:16px;">Клиенты не найдены</div>'; return; }
   list.innerHTML = filtered.slice(0, 50).map(c => `
     <div class="client-list-item">
       <div class="client-info">
-        <div class="client-name-text">${c.name} <span class="level-badge level-${c.level.toLowerCase()}">${c.level}</span></div>
+        <div class="client-name-text">${c.name || '—'} <span class="level-badge level-${c.level.toLowerCase()}">${c.level}</span></div>
         <div class="client-phone-text">${c.phone}</div>
       </div>
       <div class="client-meta">
@@ -512,7 +512,7 @@ async function completeSale() {
 function sendWhatsApp() {
   if (!lastSale) return;
   var phone = lastSale.client.phone.replace(/\D/g, '');
-  var clientName = (lastSale.client.name === 'Клиент' || !lastSale.client.name) ? 'Дорогой клиент' : lastSale.client.name;
+  var clientName = (!lastSale.client.name || lastSale.client.name === 'Клиент' || lastSale.client.name === '—') ? 'Дорогой клиент' : lastSale.client.name;
   var msg = encodeURIComponent(
     clientName + ', спасибо за покупку в Foreveryoung Astana!\n\n' +
     'Начислено: +' + lastSale.cbEarned.toLocaleString() + ' тг кэшбека\n' +
